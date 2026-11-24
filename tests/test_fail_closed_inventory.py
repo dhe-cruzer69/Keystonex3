@@ -51,10 +51,14 @@ def test_inventory_uses_authenticated_private_aware_endpoint(monkeypatch) -> Non
     assert FakeClient.calls[0]["params"]["affiliation"] == "owner,collaborator,organization_member"
 
 
-def test_nightly_workflow_does_not_suppress_collector_or_push_failures() -> None:
+def test_nightly_workflow_is_read_only_and_preserves_snapshot_evidence() -> None:
     from pathlib import Path
 
     workflow = Path(".github/workflows/nightly-audit.yml").read_text(encoding="utf-8")
     assert "|| true" not in workflow
-    assert "git push" in workflow
     assert "X4_FLEET_TOKEN" in workflow
+    assert "contents: read" in workflow
+    assert "contents: write" not in workflow
+    assert "git push" not in workflow
+    assert "if-no-files-found: error" in workflow
+    assert "retention-days: 30" in workflow
